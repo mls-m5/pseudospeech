@@ -23,7 +23,6 @@ double rnd() {
 
 double triangle(double t) {
 	return t - (int) t - .5;
-
 }
 
 double lowPass(double sample, double history, double cutof) {
@@ -32,7 +31,7 @@ double lowPass(double sample, double history, double cutof) {
 
 void loadLetter(string letter, string fname = "") {
 	if (fname.empty()) {
-		fname = letter + ".wav";
+		fname = "samples/" + letter + ".wav";
 	}
 	BufferPtr buffer(new Buffer(fname));
 	bufferMap[letter] = buffer;
@@ -46,6 +45,9 @@ public:
 
 	Letter(std::string letter) {
 		if (not letter.empty()) {
+
+			string singleCharacterConsonants = "bcdfghkljmnpqrstvz";
+
 			buffer = bufferMap[letter];
 			if (buffer) {
 				startFrequency = stopFrequency = 1;
@@ -61,11 +63,14 @@ public:
 		if (buffer) {
 			for (int i = 0; i < bufferSize; ++i) {
 				time += startFrequency;
-				if (time >= length) {
-					out[i] = 0;
+				if (time < 0) {
+					//Wait
+				}
+				else if (time >= length) {
+					break;
 				}
 				else {
-					out[i] = buffer->at(time);
+					out[i] += buffer->at(time);
 				}
 			}
 		}
@@ -75,7 +80,7 @@ public:
 				double step = (double) 1. / SoundEngine::GetSampleRate() * frequency;
 				time += step;
 				if (time > length) {
-					out[i] = 0;
+					break;
 				}
 				else {
 					double noise = noiseValue;
@@ -87,7 +92,7 @@ public:
 					if (toneDrop) {
 						frequency = (stopFrequency - startFrequency) * timeAmount + startFrequency;
 					}
-					out[i] = rnd() * noise + triangle(time) * tone;
+					out[i] += (rnd() * noise + triangle(time) * tone);
 				}
 			}
 		}
@@ -95,6 +100,12 @@ public:
 		if (time > length) {
 			finished = true;
 		}
+	}
+
+	void setPause(double length) {
+		this->length = length;
+		noiseValue = 0;
+		toneValue = 0;
 	}
 
 	double length = .1;
@@ -107,25 +118,58 @@ public:
 	bool fadeOut = false;
 	double startFrequency = 440.;
 	double stopFrequency = 880.;
+	bool consonant = false;
 
 	BufferPtr buffer;
 };
 
 class Speech: public Element {
 public:
+	Speech() {
+		vowel.finished = true;
+		consonant.finished = true;
+	}
+
 	void process(sample_t* in, sample_t* out, int bufferSize) override {
+
+		for (int i = 0; i < bufferSize; ++i) {
+			out[i] = 0;
+		}
+
 		if (!isEmpty()) {
 			auto &letter = _queue.front();
-			letter.process(out, bufferSize);
 
-			if (letter.finished) {
-				_queue.pop();
+			if (consonant.finished and vowel.finished) {
+				if (not isEmpty() and _queue.front().consonant) {
+					consonant = _queue.front();
+					_queue.pop();
+				}
 			}
+			if (vowel.finished) {
+				if (not isEmpty() and not _queue.front().consonant) {
+					vowel = _queue.front();
+					if (not consonant.finished) {
+						if (vowel.buffer) {
+							vowel.time = -consonant.length;
+						}
+					}
+					_queue.pop();
+				}
+			}
+
+//			letter.process(out, bufferSize);
+
+//			if (letter.finished) {
+//				_queue.pop();
+//			}
 		}
-		else {
-			for (int i = 0; i < bufferSize; ++i) {
-				out[i] = 0;
-			}
+
+		if (not vowel.finished) {
+			vowel.process(out, bufferSize);
+		}
+
+		if (not consonant.finished) {
+			consonant.process(out, bufferSize);
 		}
 	}
 
@@ -142,7 +186,7 @@ public:
 		pushLetter(letter);
 	}
 
-	void pushString(string text) {
+	void pushText(string text) {
 		string str;
 		text += " "; //to flush the output
 		for (auto c: text) {
@@ -161,6 +205,8 @@ public:
 	}
 
 	queue<Letter> _queue;
+	Letter vowel;
+	Letter consonant;
 };
 
 
@@ -181,26 +227,12 @@ int main() {
 	}
 
 	Speech speech;
-//	for (int i = 0; i < 5; ++i) {
-//		{
-//			Letter letter;
-//			letter.noiseValue = 0;
-//			speech.pushLetter(letter);
-//		}
-//		{
-//			Letter letter;
-//			letter.toneValue = 0;
-//			letter.fadeOut = true;
-//			speech.pushLetter(letter);
-//		}
-//		{
-//			Letter letter;
-//			letter.toneValue = 0;
-//			speech.pushLetter(letter);
-//		}
-//	}
 
-	speech.pushString("välkommen");
+	speech.pushText("välkommen");
+	auto sampleRate = SoundEngine::GetSampleRate();
+	bufferMap[" "] = BufferPtr(new Buffer(sampleRate / 20));
+	bufferMap["."] = BufferPtr(new Buffer(sampleRate / 2));
+	bufferMap[","] = bufferMap[";"] = bufferMap["."];
 
 	SoundEngine::AddElement(&speech);
 	SoundEngine::Activate();
@@ -209,7 +241,7 @@ int main() {
 	string line;
 	while (cin) {
 		getline(cin, line);
-		speech.pushString(line);
+		speech.pushText(line);
 	}
 	cout << "stänger av..." << endl;
 	SoundEngine::Close();

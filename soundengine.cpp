@@ -150,7 +150,7 @@ bool SoundEngine::Init(std::string name) {
 
 	inputParameters.channelCount = 1;       /* stereo input */
 	inputParameters.sampleFormat = paFloat32;
-	inputParameters.suggestedLatency = Pa_GetDeviceInfo( inputParameters.device )->defaultHighOutputLatency;
+	inputParameters.suggestedLatency = Pa_GetDeviceInfo( inputParameters.device )->defaultHighInputLatency;
 	inputParameters.hostApiSpecificStreamInfo = 0; //NULL
 
 	outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
@@ -161,7 +161,7 @@ bool SoundEngine::Init(std::string name) {
 	}
 	outputParameters.channelCount = 1;       /* stereo output */
 	outputParameters.sampleFormat = paFloat32;
-	outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
+	outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultHighOutputLatency;
 	outputParameters.hostApiSpecificStreamInfo = 0; //NULL
 
 //	if (buffers.size() == 0){
