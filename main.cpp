@@ -211,7 +211,7 @@ public:
 
 
 
-int main() {
+int main(int argc, char **argv) {
 	SoundEngine::Init("speech");
 
 	string singleCharacterLetters = "abcdefghijklmnopqrstuvxyz";
@@ -227,8 +227,13 @@ int main() {
 	}
 
 	Speech speech;
-
-	speech.pushText("välkommen");
+	
+	if (argc > 1) {
+		SoundEngine::SetOutputFile(argv[1]);
+	}
+	else {
+		speech.pushText("välkommen");
+	}
 	auto sampleRate = SoundEngine::GetSampleRate();
 	bufferMap[" "] = BufferPtr(new Buffer(sampleRate / 20));
 	bufferMap["."] = BufferPtr(new Buffer(sampleRate / 2));

@@ -16,6 +16,7 @@
 
 namespace SoundEngine {
 	bool Init(std::string name = "");
+	void SetOutputFile(std::string filename = "");
 	bool Activate();
 	bool Close();
 	void AddElement(Element *e);

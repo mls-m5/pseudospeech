@@ -14,9 +14,11 @@
 #include <stdexcept>
 #include <list>
 #include <portaudio.h>
+#include <fstream>
 
 int SampleRate = 44100; //Temporary value
 int BufferSize = 100; //Temporary value
+
 
 namespace SoundEngine {
 static std::list<Element*> elementList;
@@ -24,6 +26,8 @@ static std::list<Element*> elementList;
 bool canCapture = true;
 sample_t *dummyInputSample = 0;
 double masterVolume = 1;
+static std::ofstream outputFile;
+static bool outputToFile = false;
 
 }
 
@@ -112,6 +116,10 @@ SoundEngine::process (unsigned int nframes, void *arg)
 			out[i] *= volume;
 		}
 	}
+	
+	if (outputToFile) {
+		outputFile.write((char *) out, sizeof(sample_t) * nframes);
+	}
 
 	for (auto element: elementList){
 		element->controlSignal();
@@ -183,6 +191,16 @@ bool SoundEngine::Init(std::string name) {
 	if( err != paNoError ) return false;
 
 	return true;
+}
+
+void SoundEngine::SetOutputFile(std::string filename) {
+	if (!filename.empty()) {
+		outputFile.open(filename, std::fstream::out);
+		
+		if (outputFile.is_open()) {
+			outputToFile = true;
+		}
+	}
 }
 
 bool SoundEngine::Activate(){
