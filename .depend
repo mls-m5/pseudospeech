@@ -1,7 +1,11 @@
 buffer.o: buffer.cpp buffer.h common.h soundengine.h element.h 
 	 g++ -c $(CFLAGS) $< -o $@
 headercreator.o: headercreator.cpp
-main.o: main.cpp soundengine.h common.h element.h buffer.h 
+main.o: main.cpp soundengine.h common.h element.h buffer.h speech.h \
+ util.h 
 	 g++ -c $(CFLAGS) $< -o $@
 soundengine.o: soundengine.cpp soundengine.h common.h element.h 
+	 g++ -c $(CFLAGS) $< -o $@
+speech.o: speech.cpp speech.h element.h common.h buffer.h util.h \
+ soundengine.h 
 	 g++ -c $(CFLAGS) $< -o $@
