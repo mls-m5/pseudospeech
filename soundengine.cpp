@@ -15,9 +15,12 @@
 #include <list>
 #include <portaudio.h>
 #include <fstream>
+#include <iostream>
 
 int SampleRate = 44100; //Temporary value
 int BufferSize = 100; //Temporary value
+
+using namespace std;
 
 
 namespace SoundEngine {
@@ -127,7 +130,7 @@ SoundEngine::process (unsigned int nframes, void *arg)
 	return 0;
 }
 
-bool SoundEngine::Init(std::string name) {
+bool SoundEngine::Init(std::string name, int outputDevice) {
 	if (stream) return 0;
 
 	PaStreamParameters inputParameters, outputParameters;
@@ -138,6 +141,7 @@ bool SoundEngine::Init(std::string name) {
 
 
 	inputParameters.device = Pa_GetDefaultInputDevice(); /* default input device */
+	// inputParameters.device =paNoDevice
 	//inputParameters.device = 14; //OSSu
 
 	if (inputParameters.device == paNoDevice) {
@@ -161,7 +165,14 @@ bool SoundEngine::Init(std::string name) {
 	inputParameters.suggestedLatency = Pa_GetDeviceInfo( inputParameters.device )->defaultHighInputLatency;
 	inputParameters.hostApiSpecificStreamInfo = 0; //NULL
 
-	outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
+	if (outputDevice == -1) {
+		outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
+	}
+	else {
+		outputParameters.device = outputDevice;
+		cout << "Soundengine selecting device " << outputDevice << endl;
+	}
+	
 	//outputParameters.device = 14;
 	if (outputParameters.device == paNoDevice) {
 		fprintf(stderr,"Error: No default output device.\n");
@@ -171,13 +182,6 @@ bool SoundEngine::Init(std::string name) {
 	outputParameters.sampleFormat = paFloat32;
 	outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultHighOutputLatency;
 	outputParameters.hostApiSpecificStreamInfo = 0; //NULL
-
-//	if (buffers.size() == 0){
-//		buffers.resize(2);
-//		for (auto it: buffers){
-//			it = new sample_t[framesPerBuffer];
-//		}
-//	}
 
 	err = Pa_OpenStream(
 			&stream,

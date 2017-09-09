@@ -10,15 +10,12 @@
 
 typedef std::shared_ptr<Buffer> BufferPtr;
 
-extern std::map<std::string, BufferPtr> bufferMap;
-
 class Letter {
 public:
 	Letter() {
-
 	}
 
-	Letter(std::string letter);
+	Letter(std::string letter, class Speech& parent);
 
 	void process(sample_t *out, int bufferSize);
 
@@ -39,6 +36,7 @@ public:
 	double startFrequency = 440.;
 	double stopFrequency = 880.;
 	bool consonant = false;
+	std::string name;
 
 	BufferPtr buffer;
 };
@@ -47,10 +45,8 @@ public:
 
 class Speech: public Element {
 public:
-	Speech() {
-		vowel.finished = true;
-		consonant.finished = true;
-	}
+	Speech(std::string voice = "");
+	
 
 	void process(sample_t* in, sample_t* out, int bufferSize) override;
 
@@ -63,7 +59,7 @@ public:
 	}
 
 	void pushLetter(std::string letterStr) {
-		Letter letter(letterStr);
+		Letter letter(letterStr, *this);
 		pushLetter(letter);
 	}
 
@@ -88,5 +84,17 @@ public:
 	std::queue<Letter> _queue;
 	Letter vowel;
 	Letter consonant;
+	std::string voice;
+	
+protected:
+	void loadCharacters(std::string voice);
+	
+	
+void loadLetter(std::string letter, std::string voice = "", std::string fname = "");
+
+	std::map<std::string, BufferPtr> bufferMap;
+	
+	friend Letter;
+
 };
 

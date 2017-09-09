@@ -29,8 +29,9 @@ typedef float sample_t;
 
 #else
 
-#include <jack/jack.h>
-#define sample_t jack_default_audio_sample_t
+// #include <jack/jack.h>
+#define sample_t float // jack_default_audio_sample_t
+
 
 #endif //win32-check
 

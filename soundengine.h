@@ -15,7 +15,7 @@
 #include "element.h"
 
 namespace SoundEngine {
-	bool Init(std::string name = "");
+	bool Init(std::string name = "", int outputDevice = -1);
 	void SetOutputFile(std::string filename = "");
 	bool Activate();
 	bool Close();

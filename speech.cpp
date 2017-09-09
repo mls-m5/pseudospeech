@@ -2,15 +2,17 @@
 
 #include "speech.h"
 #include "soundengine.h"
+#include <iostream>
 
 using namespace std;
 
-Letter::Letter(std::string letter) {
+Letter::Letter(std::string letter, class Speech &parent):
+name(letter) {
     if (not letter.empty()) {
 
         string singleCharacterConsonants = "bcdfghkljmnpqrstvz";
 
-        buffer = bufferMap[letter];
+        buffer = parent.bufferMap[letter];
         if (buffer) {
             startFrequency = stopFrequency = 1;
             length = buffer->size();
@@ -29,6 +31,7 @@ void Letter::process(sample_t *out, int bufferSize) {
                 //Wait
             }
             else if (time >= length) {
+                finished = true;
                 break;
             }
             else {
@@ -60,9 +63,52 @@ void Letter::process(sample_t *out, int bufferSize) {
     }
 }
 
+Speech::Speech(string voice):
+voice(voice) {
+    vowel.finished = true;
+    consonant.finished = true;
+    loadCharacters(voice);
+}
+
+void Speech::loadCharacters(string voice) {
+    cout << "loading voice " << voice << endl;
+    string singleCharacterLetters = "abcdefghijklmnopqrstuvxyz";
+	string utfCharacters[] = {"å", "ä", "ö"};
+	for (auto l: singleCharacterLetters) {
+		string str;
+		str += l;
+
+		loadLetter(str, voice);
+	}
+	for (auto l: utfCharacters) {
+		loadLetter(l, voice);
+    }
+    
+
+    //assuming standard sample rate
+    auto sampleRate = 44100;
+    bufferMap[" "] = BufferPtr(new Buffer(sampleRate / 20));
+	bufferMap["."] = BufferPtr(new Buffer(sampleRate / 2));
+	bufferMap[","] = bufferMap[";"] = bufferMap["."];
+}
+
+
+void Speech::loadLetter(string letter, string voice, string fname) {
+	if (fname.empty()) {
+		fname = "samples/" + voice + "/" + letter + ".wav";
+	}
+	BufferPtr buffer(new Buffer(fname));
+	if (buffer->size() == 0) {
+        cerr << "could not load " << letter << endl;
+    }
+    // else {
+        // cout << "loaded " << letter << " with length " << buffer->size() << endl;
+    // }
+	bufferMap[letter] = buffer;
+}
+
 
 void Speech::process(sample_t* in, sample_t* out, int bufferSize) {
-    
     for (int i = 0; i < bufferSize; ++i) {
         out[i] = 0;
     }
