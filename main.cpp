@@ -11,6 +11,27 @@ using namespace std;
 
 
 
+string helptext = R"xx(
+a speech syntheziser
+usage:
+speech [options]
+
+-v [voice]              select voice eg matt, rob, r2
+-f [file]               output to file
+--nohello               disable the wellcome message
+--writeback             print the spoken text (good for learning eg r2 sounds)
+-h                      print this text
+-o [device number]      select sound output device
+
+examples:
+Use rob voice:
+./speech -v rob
+
+Use r2 voice, enable writeback:
+./speech -v r2 --writeback
+
+
+)xx";
 
 int main(int argc, char **argv) {
 	struct {
@@ -18,6 +39,7 @@ int main(int argc, char **argv) {
 		int outputDevice = -1;
 		string outputFile = "";
 		bool noGreeting = false;
+		bool writeBack = false;
 	} settings;
 	
 	for (int i = 1; i < argc; ++i) {
@@ -41,6 +63,13 @@ int main(int argc, char **argv) {
 		else if(arg == "--nohello") {
 			settings.noGreeting = true;
 		}
+		else if (arg == "--writeback") {
+			settings.writeBack = true;
+		}
+		else if (arg == "-h" || arg == "--help") {
+			cout << helptext << endl;
+			return 0;
+		}
 		
 	}
 
@@ -57,6 +86,8 @@ int main(int argc, char **argv) {
 	else if (! settings.noGreeting) {
 		speech.pushText("välkommen");
 	}
+	
+	speech.writeBack(settings.writeBack);
 	auto sampleRate = SoundEngine::GetSampleRate();
 
 	SoundEngine::AddElement(&speech);

@@ -101,6 +101,13 @@ void Speech::process(sample_t* in, sample_t* out, int bufferSize) {
             if (not isEmpty() and _queue.front().consonant) {
                 consonant = _queue.front();
                 _queue.pop();
+                if (_writeBack) {
+                    cout << consonant.name;
+                    cout.flush();
+                    if (_queue.empty()) {
+                        cout << endl;
+                    }
+                }
             }
         }
         if (vowel.finished) {
@@ -112,6 +119,13 @@ void Speech::process(sample_t* in, sample_t* out, int bufferSize) {
                     }
                 }
                 _queue.pop();
+                if (_writeBack) {
+                    cout << vowel.name;
+                    cout.flush();
+                    if (_queue.empty()) {
+                        cout << endl;
+                    }
+                }
             }
         }
     }

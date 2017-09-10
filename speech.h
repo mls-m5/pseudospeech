@@ -62,6 +62,14 @@ public:
 		Letter letter(letterStr, *this);
 		pushLetter(letter);
 	}
+	
+	void writeBack(bool state) {
+		_writeBack = state;
+	}
+	
+	bool writeBack() {
+		return _writeBack;
+	}
 
 	void pushText(std::string text) {
 		std::string str;
@@ -85,6 +93,7 @@ public:
 	Letter vowel;
 	Letter consonant;
 	std::string voice;
+	bool _writeBack = false;
 	
 protected:
 	void loadCharacters(std::string voice);
