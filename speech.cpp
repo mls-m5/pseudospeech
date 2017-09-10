@@ -10,9 +10,6 @@ using namespace std;
 Letter::Letter(std::string letter, class Speech &parent):
 name(letter) {
     if (not letter.empty()) {
-
-        // string singleCharacterConsonants = "bcdfghkljmnpqrstvz";
-
         if (parent.bufferMap.find(letter) == parent.bufferMap.end()) {
             // throw "character not found";
             return;
@@ -22,9 +19,6 @@ name(letter) {
             startFrequency = stopFrequency = 1;
             length = buffer->size();
         }
-        // else {
-        //     length = 0;
-        // }
     }
 }
 
@@ -32,43 +26,19 @@ void Letter::process(sample_t *out, int bufferSize) {
     if (!length) {
         return;
     }
-    // if (length >= 0) {
-        for (int i = 0; i < bufferSize; ++i) {
-            time += startFrequency;
-            if (time < 0) {
-                //Wait
-            }
-            else if (time >= length) {
-                finished = true;
-                break;
-            }
-            else {
-                out[i] += buffer->at(time);
-            }
+    for (int i = 0; i < bufferSize; ++i) {
+        time += startFrequency;
+        if (time < 0) {
+            //Wait
         }
-    // }
-    // else {
-    //     for (auto i = 0; i < bufferSize; ++i) {
-    //         double frequency = startFrequency;
-    //         double step = (double) 1. / SoundEngine::GetSampleRate() * frequency;
-    //         time += step;
-    //         if (time > length) {
-    //             break;
-    //         }
-    //         else {
-    //             double noise = noiseValue;
-    //             double tone = noiseValue;
-    //             double timeAmount = (length - time) / length;
-    //             if (fadeOut) {
-    //                 noise = noiseValue * timeAmount;
-    //             }
-    //             if (toneDrop) {
-    //                 frequency = (stopFrequency - startFrequency) * timeAmount + startFrequency;
-    //             }
-    //             out[i] += (rnd() * noise + triangle(time) * tone);
-    //         }
-    //     }
-    // }
+        else if (time >= length) {
+            finished = true;
+            break;
+        }
+        else {
+            out[i] += buffer->at(time);
+        }
+    }
 }
 
 Speech::Speech(string voice):
@@ -115,9 +85,6 @@ void Speech::loadLetter(string letter, string voice, string fname) {
 	if (buffer->size() == 0) {
         cerr << "could not load " << letter << endl;
     }
-    // else {
-        // cout << "loaded " << letter << " with length " << buffer->size() << endl;
-    // }
 	bufferMap[letter] = buffer;
 }
 
