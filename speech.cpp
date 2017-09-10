@@ -3,6 +3,7 @@
 #include "speech.h"
 #include "soundengine.h"
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -10,21 +11,28 @@ Letter::Letter(std::string letter, class Speech &parent):
 name(letter) {
     if (not letter.empty()) {
 
-        string singleCharacterConsonants = "bcdfghkljmnpqrstvz";
+        // string singleCharacterConsonants = "bcdfghkljmnpqrstvz";
 
+        if (parent.bufferMap.find(letter) == parent.bufferMap.end()) {
+            // throw "character not found";
+            return;
+        }
         buffer = parent.bufferMap[letter];
         if (buffer) {
             startFrequency = stopFrequency = 1;
             length = buffer->size();
         }
-        else {
-            length = 0;
-        }
+        // else {
+        //     length = 0;
+        // }
     }
 }
 
 void Letter::process(sample_t *out, int bufferSize) {
-    if (buffer) {
+    if (!length) {
+        return;
+    }
+    // if (length >= 0) {
         for (int i = 0; i < bufferSize; ++i) {
             time += startFrequency;
             if (time < 0) {
@@ -38,29 +46,29 @@ void Letter::process(sample_t *out, int bufferSize) {
                 out[i] += buffer->at(time);
             }
         }
-    }
-    else {
-        for (auto i = 0; i < bufferSize; ++i) {
-            double frequency = startFrequency;
-            double step = (double) 1. / SoundEngine::GetSampleRate() * frequency;
-            time += step;
-            if (time > length) {
-                break;
-            }
-            else {
-                double noise = noiseValue;
-                double tone = noiseValue;
-                double timeAmount = (length - time) / length;
-                if (fadeOut) {
-                    noise = noiseValue * timeAmount;
-                }
-                if (toneDrop) {
-                    frequency = (stopFrequency - startFrequency) * timeAmount + startFrequency;
-                }
-                out[i] += (rnd() * noise + triangle(time) * tone);
-            }
-        }
-    }
+    // }
+    // else {
+    //     for (auto i = 0; i < bufferSize; ++i) {
+    //         double frequency = startFrequency;
+    //         double step = (double) 1. / SoundEngine::GetSampleRate() * frequency;
+    //         time += step;
+    //         if (time > length) {
+    //             break;
+    //         }
+    //         else {
+    //             double noise = noiseValue;
+    //             double tone = noiseValue;
+    //             double timeAmount = (length - time) / length;
+    //             if (fadeOut) {
+    //                 noise = noiseValue * timeAmount;
+    //             }
+    //             if (toneDrop) {
+    //                 frequency = (stopFrequency - startFrequency) * timeAmount + startFrequency;
+    //             }
+    //             out[i] += (rnd() * noise + triangle(time) * tone);
+    //         }
+    //     }
+    // }
 }
 
 Speech::Speech(string voice):
@@ -96,6 +104,12 @@ void Speech::loadCharacters(string voice) {
 void Speech::loadLetter(string letter, string voice, string fname) {
 	if (fname.empty()) {
 		fname = "samples/" + voice + "/" + letter + ".wav";
+        
+        //Check if there is a wave file, else tries a mp3
+        ifstream testfile(fname);
+        if (!testfile.good()) {
+		    fname = "samples/" + voice + "/" + letter + ".mp3";
+        }
 	}
 	BufferPtr buffer(new Buffer(fname));
 	if (buffer->size() == 0) {

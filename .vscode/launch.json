@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceRoot}/speech",
-            "args": [],
+            "args": ["--nohello"],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
             "environment": [],

@@ -17,6 +17,7 @@ int main(int argc, char **argv) {
 		string voice = "mat";
 		int outputDevice = -1;
 		string outputFile = "";
+		bool noGreeting = false;
 	} settings;
 	
 	for (int i = 1; i < argc; ++i) {
@@ -37,6 +38,9 @@ int main(int argc, char **argv) {
 			++i;
 			settings.outputFile = argv[i];
 		}
+		else if(arg == "--nohello") {
+			settings.noGreeting = true;
+		}
 		
 	}
 
@@ -50,7 +54,7 @@ int main(int argc, char **argv) {
 		SoundEngine::SetOutputFile(settings.outputFile);
 		cout << "Saving to file: " << settings.outputFile << endl;
 	}
-	else {
+	else if (! settings.noGreeting) {
 		speech.pushText("välkommen");
 	}
 	auto sampleRate = SoundEngine::GetSampleRate();
