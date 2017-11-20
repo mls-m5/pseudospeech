@@ -1,6 +1,6 @@
 COMPILER=g++
 
-OBJS=main.o soundengine.o buffer.o speech.o
+OBJS=main.o soundengine.o buffer.o speech.o wavfile.o
 
 LIBS= -lpthread -lportaudio -lsndfile
 CFLAGS=-g -std=c++11 -O0

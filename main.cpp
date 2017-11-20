@@ -6,6 +6,9 @@
 #include "buffer.h"
 #include "speech.h"
 #include <sstream>
+#include <chrono>
+#include <thread>
+#include "wavfile.h"
 
 using namespace std;
 
@@ -17,11 +20,14 @@ usage:
 speech [options]
 
 -v [voice]              select voice eg matt, rob, r2
--f [file]               output to file
+-o [file]               output to file
+-t                      read the remainding arguments as text 
+                        (use this as last argument)
 --nohello               disable the wellcome message
+-s                      silent, print directly to file
 --writeback             print the spoken text (good for learning eg r2 sounds)
--h                      print this text
--o [device number]      select sound output device
+-d [device number]      select sound output device
+-h / --help             print this text
 
 examples:
 Use rob voice:
@@ -33,6 +39,19 @@ Use r2 voice, enable writeback:
 
 )xx";
 
+
+void silentOutput(Speech *speech, string filename) {
+	std::vector<float> buffer(255);
+	WavFile file(filename);
+	
+	cout << "writing to file" << endl;
+	
+	while (speech->lock) {
+		speech->process(nullptr, &buffer[0], buffer.size());
+		file.write(buffer);
+	}
+}
+
 int main(int argc, char **argv) {
 	struct {
 		string voice = "mat";
@@ -40,6 +59,8 @@ int main(int argc, char **argv) {
 		string outputFile = "";
 		bool noGreeting = false;
 		bool writeBack = false;
+		bool silent = false;
+		string outputText;
 	} settings;
 	
 	for (int i = 1; i < argc; ++i) {
@@ -49,14 +70,14 @@ int main(int argc, char **argv) {
 			++i;
 			settings.voice = argv[i];
 		}
-		else if (arg == "-o") {
+		else if (arg == "-d") {
 			++i;
 			
 			istringstream ss(argv[i]);
 			ss >> settings.outputDevice;
 			cout << "selecting outputdevice " << settings.outputDevice << endl;
 		}
-		else if (arg == "-f") {
+		else if (arg == "-o") {
 			++i;
 			settings.outputFile = argv[i];
 		}
@@ -70,20 +91,46 @@ int main(int argc, char **argv) {
 			cout << helptext << endl;
 			return 0;
 		}
-		
+		else if (arg == "-t") {
+			for (int j = i + 1; j < argc; ++j) {
+				settings.outputText += (argv[j] + string(" "));
+			}
+			cout << "reading text: " << endl;
+			cout << settings.outputText << endl;
+		}
+		else if (arg == "-s") {
+			settings.silent = true;
+		}
 	}
+	
+	Speech speech(settings.voice);
+
+	if (settings.silent) {
+		if (settings.outputFile.empty()) {
+			cerr << "no outputfile specified" << endl;
+			return 1;
+		}
+		if (settings.outputText.empty()) {
+			cerr << "no text specified" << endl;
+			return 1;
+		}
+		
+		speech.pushText(settings.outputText);
+		silentOutput(&speech, settings.outputFile);
+
+		cout << "end of silent output";
+		return 0;
+	}
+
 
 	SoundEngine::Init("speech", settings.outputDevice);
 
-
-
-	Speech speech(settings.voice);
 	
 	if (!settings.outputFile.empty()) {
 		SoundEngine::SetOutputFile(settings.outputFile);
 		cout << "Saving to file: " << settings.outputFile << endl;
 	}
-	else if (! settings.noGreeting) {
+	else if (! settings.noGreeting && settings.outputText.empty()) {
 		speech.pushText("välkommen");
 	}
 	
@@ -93,11 +140,22 @@ int main(int argc, char **argv) {
 	SoundEngine::AddElement(&speech);
 	SoundEngine::Activate();
 	cout << "SpeechSynth" << endl;
+	
 
-	string line;
-	while (cin) {
-		getline(cin, line);
-		speech.pushText(line);
+
+	if (settings.outputText.empty()) {
+		string line;
+		while (cin) {
+			getline(cin, line);
+			speech.pushText(line);
+		}
+	}
+	else {
+		speech.pushText(settings.outputText);
+		while (speech.lock) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			//Spin
+		}
 	}
 	cout << "stänger av..." << endl;
 	SoundEngine::Close();

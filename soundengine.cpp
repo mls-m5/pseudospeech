@@ -6,6 +6,7 @@
  */
 
 #include "soundengine.h"
+#include "wavfile.h"
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
@@ -29,7 +30,7 @@ static std::list<Element*> elementList;
 bool canCapture = true;
 sample_t *dummyInputSample = 0;
 double masterVolume = 1;
-static std::ofstream outputFile;
+static WavFile outputFile;
 static bool outputToFile = false;
 
 }
@@ -121,7 +122,7 @@ SoundEngine::process (unsigned int nframes, void *arg)
 	}
 	
 	if (outputToFile) {
-		outputFile.write((char *) out, sizeof(sample_t) * nframes);
+		outputFile.write(out, nframes);
 	}
 
 	for (auto element: elementList){
@@ -199,10 +200,13 @@ bool SoundEngine::Init(std::string name, int outputDevice) {
 
 void SoundEngine::SetOutputFile(std::string filename) {
 	if (!filename.empty()) {
-		outputFile.open(filename, std::fstream::out);
+		outputFile.open(filename, 1);
 		
-		if (outputFile.is_open()) {
+		if (outputFile) {
 			outputToFile = true;
+		}
+		else {
+			cerr << "Failed to open file " << filename << endl;
 		}
 	}
 }
@@ -228,6 +232,9 @@ bool SoundEngine::Close() {
 	if (dummyInputSample){
 		delete [] dummyInputSample;
 	}
+	
+	outputFile.close();
+	
 	return true;
 }
 

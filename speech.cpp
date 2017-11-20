@@ -137,5 +137,9 @@ void Speech::process(sample_t* in, sample_t* out, int bufferSize) {
     if (not consonant.finished) {
         consonant.process(out, bufferSize);
     }
+    
+    if (isEmpty() && consonant.finished && vowel.finished) {
+        lock = false;
+    }
 }
     

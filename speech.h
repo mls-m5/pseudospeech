@@ -7,8 +7,11 @@
 #include "util.h"
 #include <map>
 #include <string>
+#include <atomic>
 
 typedef std::shared_ptr<Buffer> BufferPtr;
+
+
 
 class Letter {
 public:
@@ -50,8 +53,14 @@ public:
 
 	void process(sample_t* in, sample_t* out, int bufferSize) override;
 
+	//Check if queue is empty
 	bool isEmpty() {
 		return _queue.empty();
+	}
+	
+	//Check if there is no more sound produced
+	bool dryOutput() {
+		return isEmpty() && vowel.finished && consonant.finished;
 	}
 
 	void pushLetter(Letter letter) {
@@ -72,6 +81,7 @@ public:
 	}
 
 	void pushText(std::string text) {
+		lock = true;
 		std::string str;
 		text += " "; //to flush the output
 		for (auto c: text) {
@@ -94,6 +104,7 @@ public:
 	Letter consonant;
 	std::string voice;
 	bool _writeBack = false;
+	bool lock = false;
 	
 protected:
 	void loadCharacters(std::string voice);
