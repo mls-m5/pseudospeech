@@ -4,3 +4,12 @@ speech
 headercreator
 *~
 *.raw
+
+*.cflags
+*.config
+*.creator
+*.creator.user
+*.cxxflags
+*.files
+*.includes
+
