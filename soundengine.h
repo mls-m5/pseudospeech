@@ -15,23 +15,22 @@
 #include "element.h"
 
 namespace SoundEngine {
-	bool Init(std::string name = "", int outputDevice = -1);
-	void SetOutputFile(std::string filename = "");
-	bool Activate();
-	bool Close();
-	void AddElement(Element *e);
-	void RemoveElement(Element *e);
-	void SetVolume(double v);
+bool Init(std::string name = "", int outputDevice = -1);
+void SetOutputFile(std::string filename = "");
+bool Activate();
+bool Close();
+void AddElement(Element *e);
+void RemoveElement(Element *e);
+void SetVolume(double v);
 
-	int GetBufferSize();
-	int GetSampleRate();
+int GetBufferSize();
+int GetSampleRate();
 
 #ifdef __ANDROID__
-	int process (sample_t *buffer, int bufferSize);
+int process(sample_t *buffer, int bufferSize);
 #else
-	int process (unsigned int nframes, void *arg);
+int process(unsigned int nframes, void *arg);
 #endif
-};
+}; // namespace SoundEngine
 
 #endif /* JACKENGINE_H_ */
-

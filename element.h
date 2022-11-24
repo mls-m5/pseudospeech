@@ -5,25 +5,23 @@
  *      Author: Mattias Larsson Sköld
  */
 
-
 #pragma once
 
-
-
 #include "common.h"
-#include <vector>
 #include <string>
+#include <vector>
 
-
-class Element{
+class Element {
 public:
-	Element() {};
-	virtual ~Element() {};
+    Element(){};
+    virtual ~Element(){};
 
-	virtual void process(sample_t* in, sample_t* out, int bufferSize) = 0;
-	virtual void controlSignal() {}; //hint to send controlMessages
+    virtual void process(sample_t *in, sample_t *out, int bufferSize) = 0;
+    virtual void controlSignal(){}; // hint to send controlMessages
 
-	virtual std::string getName() { return elementName; }
+    virtual std::string getName() {
+        return elementName;
+    }
 
-	std::string elementName = "generic element";
+    std::string elementName = "generic element";
 };

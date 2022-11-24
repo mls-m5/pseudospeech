@@ -1,11 +1,9 @@
 
 #pragma once
 
-#include <string>
 #include <fstream>
+#include <string>
 #include <vector>
-
-
 
 class WavFile {
 public:
@@ -17,7 +15,7 @@ public:
     ~WavFile() {
         close();
     }
-    
+
     void open(std::string filename, int channels = 1);
     void write(float *values, int size);
     void write(std::vector<float> &data) {
@@ -25,9 +23,8 @@ public:
     }
     void close();
 
-
     operator bool() {
-        return (bool) file;
+        return (bool)file;
     }
 
     std::ofstream file;
@@ -35,5 +32,3 @@ public:
     size_t file_size = 0;
     int channels = 1;
 };
-
-

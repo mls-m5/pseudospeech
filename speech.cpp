@@ -1,14 +1,14 @@
-//Copyright Mattias Lasersköld: mattias.l.sk@gmail.com
+// Copyright Mattias Lasersköld: mattias.l.sk@gmail.com
 
 #include "speech.h"
 #include "soundengine.h"
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 using namespace std;
 
-Letter::Letter(std::string letter, class Speech &parent):
-name(letter) {
+Letter::Letter(std::string letter, class Speech &parent)
+    : name(letter) {
     if (not letter.empty()) {
         if (parent.bufferMap.find(letter) == parent.bufferMap.end()) {
             // throw "character not found";
@@ -29,7 +29,7 @@ void Letter::process(sample_t *out, int bufferSize) {
     for (int i = 0; i < bufferSize; ++i) {
         time += startFrequency;
         if (time < 0) {
-            //Wait
+            // Wait
         }
         else if (time >= length) {
             finished = true;
@@ -41,8 +41,8 @@ void Letter::process(sample_t *out, int bufferSize) {
     }
 }
 
-Speech::Speech(string voice):
-voice(voice) {
+Speech::Speech(string voice)
+    : voice(voice) {
     vowel.finished = true;
     consonant.finished = true;
     loadCharacters(voice);
@@ -51,45 +51,42 @@ voice(voice) {
 void Speech::loadCharacters(string voice) {
     cout << "loading voice " << voice << endl;
     string singleCharacterLetters = "abcdefghijklmnopqrstuvxyz";
-	string utfCharacters[] = {"å", "ä", "ö"};
-	for (auto l: singleCharacterLetters) {
-		string str;
-		str += l;
+    string utfCharacters[] = {"å", "ä", "ö"};
+    for (auto l : singleCharacterLetters) {
+        string str;
+        str += l;
 
-		loadLetter(str, voice);
-	}
-	for (auto l: utfCharacters) {
-		loadLetter(l, voice);
+        loadLetter(str, voice);
     }
-    
+    for (auto l : utfCharacters) {
+        loadLetter(l, voice);
+    }
 
-    //assuming standard sample rate
+    // assuming standard sample rate
     auto sampleRate = 44100;
     bufferMap[" "] = BufferPtr(new Buffer(sampleRate / 20));
-	bufferMap["."] = BufferPtr(new Buffer(sampleRate / 2));
-	bufferMap[","] = bufferMap[";"] = bufferMap["."];
+    bufferMap["."] = BufferPtr(new Buffer(sampleRate / 2));
+    bufferMap[","] = bufferMap[";"] = bufferMap["."];
 }
-
 
 void Speech::loadLetter(string letter, string voice, string fname) {
-	if (fname.empty()) {
-		fname = "samples/" + voice + "/" + letter + ".wav";
-        
-        //Check if there is a wave file, else tries a mp3
+    if (fname.empty()) {
+        fname = "samples/" + voice + "/" + letter + ".wav";
+
+        // Check if there is a wave file, else tries a mp3
         ifstream testfile(fname);
         if (!testfile.good()) {
-		    fname = "samples/" + voice + "/" + letter + ".mp3";
+            fname = "samples/" + voice + "/" + letter + ".mp3";
         }
-	}
-	BufferPtr buffer(new Buffer(fname));
-	if (buffer->size() == 0) {
+    }
+    BufferPtr buffer(new Buffer(fname));
+    if (buffer->size() == 0) {
         cerr << "could not load " << letter << endl;
     }
-	bufferMap[letter] = buffer;
+    bufferMap[letter] = buffer;
 }
 
-
-void Speech::process(sample_t* in, sample_t* out, int bufferSize) {
+void Speech::process(sample_t *in, sample_t *out, int bufferSize) {
     for (int i = 0; i < bufferSize; ++i) {
         out[i] = 0;
     }
@@ -137,9 +134,8 @@ void Speech::process(sample_t* in, sample_t* out, int bufferSize) {
     if (not consonant.finished) {
         consonant.process(out, bufferSize);
     }
-    
+
     if (isEmpty() && consonant.finished && vowel.finished) {
         lock = false;
     }
 }
-    
