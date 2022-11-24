@@ -13,8 +13,8 @@
 
 class Element {
 public:
-    Element(){};
-    virtual ~Element(){};
+    Element() = default;
+    virtual ~Element() = default;
 
     virtual void process(sample_t *in, sample_t *out, int bufferSize) = 0;
     virtual void controlSignal(){}; // hint to send controlMessages
