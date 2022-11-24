@@ -1,6 +1,7 @@
 // Copyright Mattias Lasersköld: mattias.l.sk@gmail.com
 
 #include "buffer.h"
+#include "settings.h"
 #include "soundengine.h"
 #include "speech.h"
 #include "wavfile.h"
@@ -11,32 +12,6 @@
 #include <thread>
 
 using namespace std;
-
-string helptext = R"xx(
-a speech syntheziser
-usage:
-speech [options]
-
--v [voice]              select voice eg matt, rob, r2
--o [file]               output to file
--t                      read the remainding arguments as text 
-                        (use this as last argument)
---nohello               disable the wellcome message
--s                      silent, print directly to file
---writeback             print the spoken text (good for learning eg r2 sounds)
--d [device number]      select sound output device
--h / --help             print this text
-
-examples:
-Use rob voice:
-./speech -v rob
-
-Use r2 voice, enable writeback:
-./speech -v r2 --writeback
-
-
-)xx";
-
 void silentOutput(Speech *speech, string filename) {
     std::vector<float> buffer(255);
     WavFile file(filename);
@@ -50,55 +25,7 @@ void silentOutput(Speech *speech, string filename) {
 }
 
 int main(int argc, char **argv) {
-    struct {
-        string voice = "mat";
-        int outputDevice = -1;
-        string outputFile = "";
-        bool noGreeting = false;
-        bool writeBack = false;
-        bool silent = false;
-        string outputText;
-    } settings;
-
-    for (int i = 1; i < argc; ++i) {
-        string arg = argv[i];
-
-        if (arg == "-v") {
-            ++i;
-            settings.voice = argv[i];
-        }
-        else if (arg == "-d") {
-            ++i;
-
-            istringstream ss(argv[i]);
-            ss >> settings.outputDevice;
-            cout << "selecting outputdevice " << settings.outputDevice << endl;
-        }
-        else if (arg == "-o") {
-            ++i;
-            settings.outputFile = argv[i];
-        }
-        else if (arg == "--nohello") {
-            settings.noGreeting = true;
-        }
-        else if (arg == "--writeback") {
-            settings.writeBack = true;
-        }
-        else if (arg == "-h" || arg == "--help") {
-            cout << helptext << endl;
-            return 0;
-        }
-        else if (arg == "-t") {
-            for (int j = i + 1; j < argc; ++j) {
-                settings.outputText += (argv[j] + string(" "));
-            }
-            cout << "reading text: " << endl;
-            cout << settings.outputText << endl;
-        }
-        else if (arg == "-s") {
-            settings.silent = true;
-        }
-    }
+    const auto settings = Settings{argc, argv};
 
     Speech speech(settings.voice);
 
@@ -130,7 +57,6 @@ int main(int argc, char **argv) {
     }
 
     speech.writeBack(settings.writeBack);
-    auto sampleRate = SoundEngine::GetSampleRate();
 
     SoundEngine::AddElement(&speech);
     SoundEngine::Activate();
