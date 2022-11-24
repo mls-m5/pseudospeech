@@ -13,3 +13,4 @@ headercreator
 *.files
 *.includes
 
+.depend
